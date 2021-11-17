@@ -1,0 +1,6 @@
+{
+	"appId": "io.ionic.starter",
+	"appName": "mcp_w11",
+	"webDir": "build",
+	"bundledWebRuntime": false
+}

@@ -1,0 +1,7 @@
+{
+  "name": "mcp_w11",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react"
+}
