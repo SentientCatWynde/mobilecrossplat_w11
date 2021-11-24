@@ -10,11 +10,19 @@ const Home: React.FC = () => {
   const db = getFirestore();
   const [students, setStudents] = useState<Array<any>>([]);
   const [selectedFile, setSelectedFile] = useState<File>();
-  const [filename, setFileName] useState('');
+  const [filename, setFileName] = useState('');
   const storage = getStorage();
   const nim = useRef<HTMLIonInputElement>(null);
   const nama = useRef<HTMLIonInputElement>(null);
   const prodi = useRef<HTMLIonInputElement>(null);
+  const nullEntry: any[] = [];
+  const [notifications, setNotifications] = useState(nullEntry);
+
+  const showToast = async(msg: string) => {
+    await Toast.show({
+      text:msg
+    })
+  }
 
   const addData = async (url : string) => {
     try {
@@ -46,6 +54,35 @@ const Home: React.FC = () => {
     })
   };
 
+  const registerPush = () => {
+    console.log('Initializing HomePage');
+
+    PushNotifications.register();
+    PushNotifications.addListener('registration', (token: Token) =>{
+      showToast('Push Registration success');
+      console.log("Push Registration Success");
+    });
+
+    PushNotifications.addListener('registrationError', (error: any) =>{
+      alert('Error on registration: ' + JSON.stringify(error));
+      console.log("Push Registration Error: ", JSON.stringify(error));
+    });
+
+    PushNotifications.addListener('registrationRecieved', (notification: PushNotificationSchema) =>{
+      setNotifications(notifications => [...notifications, {id: notification.id, title: notification.title, body: notification.bobdy, type: 'foreground'}]);
+      console.log('notification: ', notification);
+      console.log('notifications: ', notifications);
+    });
+
+    PushNotifications.addListener('registrationActionPerformed', (notification: ActionPerformed) =>{
+      setNotifications(notifications => [...notifications, {id: notification.data.id, title: notification.data.title, body: notification.data.bobdy, type: 'action'}]);
+      console.log('notification: ', notification);
+      console.log('notifications: ', notifications);
+    });
+
+
+  }
+
   /* useEffect( ( ) => {
     const addData = async () => {
       try { 
@@ -63,6 +100,19 @@ const Home: React.FC = () => {
     addData();
   }) */
   useEffect(() => {
+    PushNotifications.checkPermissions().then((res))=>{
+      if(res.recieve === 'granted'){
+        PushNotifications.requestPermissions().then((res) => {
+          if(res.recieve === 'denied'){
+            showToast('Push Notifications permission denied');
+          }else{
+            showToast('Push Notifications permission granted');
+            registerPush();
+          }
+        })
+      }, []}});
+  
+
     async function getData() {
       const querySnapshot = await getDocs(collection(db, "students"));
       console.log('querySnapshot: ', querySnapshot);
